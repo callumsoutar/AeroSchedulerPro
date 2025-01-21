@@ -151,8 +151,14 @@ export function InvoicesDataTable({ status }: InvoicesDataTableProps) {
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
-        console.log('Fetching user role...')
+        console.log('Starting fetchUserRole...')
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        console.log('Session check:', {
+          hasSession: !!session,
+          userId: session?.user?.id,
+          error: sessionError
+        })
         
         if (sessionError) {
           console.error('Session error:', sessionError)
@@ -164,13 +170,20 @@ export function InvoicesDataTable({ status }: InvoicesDataTableProps) {
           throw new Error('No authenticated user')
         }
 
-        console.log('User ID:', session.user.id)
+        console.log('Fetching role for user ID:', session.user.id)
         
         const { data: user, error: userError } = await supabase
           .from('User')
-          .select('role')
+          .select('role, organizationId')
           .eq('id', session.user.id)
           .single()
+
+        console.log('User query result:', {
+          user,
+          error: userError,
+          hasRole: !!user?.role,
+          hasOrgId: !!user?.organizationId
+        })
 
         if (userError) {
           console.error('Error fetching user role:', userError)
@@ -213,18 +226,27 @@ export function InvoicesDataTable({ status }: InvoicesDataTableProps) {
           throw new Error('No authenticated user')
         }
 
-        const organizationId = session.user.user_metadata?.organizationId
-        console.log('Organization ID:', organizationId)
+        const { data: userData, error: userError } = await supabase
+          .from("User")
+          .select("organizationId")
+          .eq("id", session.user.id)
+          .single();
 
-        if (!organizationId) {
-          console.error('No organizationId in metadata')
+        console.log('User data:', {
+          userData,
+          organizationId: userData?.organizationId,
+          error: userError
+        });
+
+        if (userError || !userData?.organizationId) {
+          console.log('No organization ID found');
           throw new Error('No organization found')
         }
 
-        console.log('Fetching invoices for organization:', organizationId)
+        console.log('Fetching invoices for organization:', userData.organizationId)
         
         console.log('Query parameters:', {
-          organizationId,
+          organizationId: userData.organizationId,
           userId: session.user.id,
           role
         })
@@ -244,7 +266,7 @@ export function InvoicesDataTable({ status }: InvoicesDataTableProps) {
               name
             )
           `)
-          .eq('organizationId', organizationId)
+          .eq('organizationId', userData.organizationId)
 
         if (role === 'MEMBER') {
           query = query.eq('userId', session.user.id)
@@ -299,31 +321,38 @@ export function InvoicesDataTable({ status }: InvoicesDataTableProps) {
 
     const setupSubscription = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      const organizationId = session?.user?.user_metadata?.organizationId
+      
+      if (!session?.user) return;
 
-      if (organizationId) {
-        console.log('Setting up real-time subscription for organization:', organizationId)
-        const channel = supabase
-          .channel('invoice-changes')
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'Invoice',
-              filter: `organizationId=eq.${organizationId}`
-            },
-            () => {
-              console.log('Received real-time update, fetching invoices...')
-              fetchInvoices()
-            }
-          )
-          .subscribe()
+      const { data: userData, error: userError } = await supabase
+        .from("User")
+        .select("organizationId")
+        .eq("id", session.user.id)
+        .single();
 
-        return () => {
-          console.log('Cleaning up subscription')
-          supabase.removeChannel(channel)
-        }
+      if (userError || !userData?.organizationId) return;
+
+      console.log('Setting up real-time subscription for organization:', userData.organizationId)
+      const channel = supabase
+        .channel('invoice-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'Invoice',
+            filter: `organizationId=eq.${userData.organizationId}`
+          },
+          () => {
+            console.log('Received real-time update, fetching invoices...')
+            fetchInvoices()
+          }
+        )
+        .subscribe()
+
+      return () => {
+        console.log('Cleaning up subscription')
+        supabase.removeChannel(channel)
       }
     }
 

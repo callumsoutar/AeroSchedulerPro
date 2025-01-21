@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { PaymentHistory } from "./payment-history";
+import { OptimizedPaymentHistory } from "./optimized-payment-history";
 
 interface InvoiceDetailsProps {
   invoice: {
@@ -202,9 +202,10 @@ export function InvoiceDetails({ invoice }: InvoiceDetailsProps) {
         </div>
 
         {/* Payment History */}
-        {invoice.payments && invoice.payments.length > 0 && (
-          <PaymentHistory payments={invoice.payments} />
-        )}
+        <OptimizedPaymentHistory 
+          invoiceId={invoice.id} 
+          invoiceNumber={invoice.invoiceNumber || undefined}
+        />
       </div>
 
       {/* Notes */}

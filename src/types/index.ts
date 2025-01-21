@@ -3,7 +3,7 @@ export type Chargeable = {
   id: string;
   name: string;
   description: string | null;
-  type: 'MEMBERSHIP' | 'AIRCRAFT' | 'INSTRUCTION' | 'OTHER';  // ChargeableType enum
+  type: 'MEMBERSHIP_FEE' | 'FLIGHT_HOUR' | 'LANDING_FEE' | 'INSTRUCTION' | 'EQUIPMENT' | 'OTHER' | 'AIRWAYS_FEE';  // ChargeableType enum
   unitPrice: number;
   taxRate: number;
   isActive: boolean;
@@ -22,6 +22,22 @@ export type AircraftType = {
   updated_at: string | null;
 };
 
+export type AircraftTechLog = {
+  id: string;
+  aircraft_id: string;
+  booking_id: string | null;
+  booking_flight_times_id: string | null;
+  current_tacho: number | null;
+  current_hobbs: number | null;
+  previous_tacho: number | null;
+  previous_hobbs: number | null;
+  tacho_time: number | null;
+  hobbs_time: number | null;
+  engine_hours: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Aircraft = {
   id: string;
   registration: string;
@@ -33,6 +49,7 @@ export type Aircraft = {
   record_tacho: boolean;
   created_at: string;
   updated_at: string;
+  tech_log?: AircraftTechLog | null;
 };
 
 export type Member = {
@@ -65,6 +82,7 @@ export type Invoice = {
   dueDate: string;
   userId: string;
   organizationId: string;
+  bookingId: string | null;
   createdAt: string;
   updatedAt: string;
   invoiceNumber: string | null;
@@ -80,6 +98,7 @@ export type Invoice = {
   balanceRemaining: number | null;
   user?: User;
   items?: InvoiceItem[];
+  booking?: Booking;
 };
 
 export type InvoiceItem = {
@@ -183,6 +202,7 @@ export type BookingDetails = {
   comments: string | null;
   instructor_comment: string | null;
   passengers: string | null;
+  eta: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -43,6 +43,8 @@ import { Chargeable } from "@/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/use-toast";
+import { useChargeables } from "@/hooks/useChargeables";
+import { useMembers, Member } from "@/hooks/useMembers";
 
 const formSchema = z.object({
   memberId: z.string().min(1, "Please select a member"),
@@ -70,13 +72,6 @@ type LineItem = {
   subtotal: number;
 };
 
-interface Member {
-  id: string;
-  name: string | null;
-  email: string;
-  memberNumber?: string;
-}
-
 export default function NewInvoiceForm() {
   const [isAdditionalInfoOpen, setIsAdditionalInfoOpen] = useState(false);
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
@@ -88,6 +83,8 @@ export default function NewInvoiceForm() {
   const supabase = createClientComponentClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { data: members = [], isLoading } = useMembers();
+  const { data: chargeables = [], isLoading: isLoadingChargeables } = useChargeables();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -99,31 +96,7 @@ export default function NewInvoiceForm() {
     },
   });
 
-  const { data: members = [], isLoading } = useQuery({
-    queryKey: ['members'],
-    queryFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) return [];
-
-      const { data: userData } = await supabase
-        .from('User')
-        .select('organizationId')
-        .eq('id', session.session.user.id)
-        .single();
-
-      if (!userData?.organizationId) return [];
-
-      const { data } = await supabase
-        .from('User')
-        .select('id, name, email, memberNumber')
-        .eq('organizationId', userData.organizationId)
-        .order('name');
-
-      return data || [];
-    }
-  });
-
-  const filteredMembers = members.filter((member) => {
+  const filteredMembers = (members || []).filter((member) => {
     if (!searchQuery) return true;
     const search = searchQuery.toLowerCase();
     return (
@@ -133,32 +106,7 @@ export default function NewInvoiceForm() {
     );
   });
 
-  const { data: chargeables = [], isLoading: isLoadingChargeables } = useQuery({
-    queryKey: ['chargeables'],
-    queryFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) return [];
-
-      const { data: userData } = await supabase
-        .from('User')
-        .select('organizationId')
-        .eq('id', session.session.user.id)
-        .single();
-
-      if (!userData?.organizationId) return [];
-
-      const { data } = await supabase
-        .from('Chargeable')
-        .select('*')
-        .eq('organizationId', userData.organizationId)
-        .eq('isActive', true)
-        .order('name');
-
-      return data || [];
-    }
-  });
-
-  const filteredChargeables = chargeables.filter((item) => {
+  const filteredChargeables = (chargeables || []).filter((item) => {
     if (!itemSearchQuery) return true;
     const search = itemSearchQuery.toLowerCase();
     return (
