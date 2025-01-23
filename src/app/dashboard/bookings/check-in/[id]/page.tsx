@@ -152,7 +152,12 @@ export default function CheckInPage({
 
       {/* Add Progress Bar */}
       <div className="py-8">
-        <BookingProgress currentStage="checkin" />
+        <BookingProgress 
+          currentStage="checkin" 
+          bookingStatus={booking.status}
+          briefing_completed={booking.briefing_completed}
+          debrief_completed={booking.debrief_completed}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-6">

@@ -164,3 +164,150 @@ create policy "Can only view own subs data." on subscriptions
 drop publication if exists supabase_realtime;
 create publication supabase_realtime
   for table products, prices;
+
+-- Create lesson_gradings table
+CREATE TABLE IF NOT EXISTS lesson_gradings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  lesson_id UUID REFERENCES lessons(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create index for lesson_gradings foreign key
+CREATE INDEX IF NOT EXISTS idx_lesson_gradings_lesson_id ON lesson_gradings(lesson_id);
+
+-- Create lesson_debriefs table
+CREATE TABLE IF NOT EXISTS lesson_debriefs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  booking_id UUID REFERENCES "Booking"(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create index for lesson_debriefs foreign key
+CREATE INDEX IF NOT EXISTS idx_lesson_debriefs_booking_id ON lesson_debriefs(booking_id);
+
+-- Create lesson_debrief_performances table
+CREATE TABLE IF NOT EXISTS lesson_debrief_performances (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  lesson_debrief_id UUID REFERENCES lesson_debriefs(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  grade INTEGER NOT NULL CHECK (grade >= 1 AND grade <= 5),
+  comments TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create index for lesson_debrief_performances foreign key
+CREATE INDEX IF NOT EXISTS idx_lesson_debrief_performances_debrief_id ON lesson_debrief_performances(lesson_debrief_id);
+
+-- Create trigger function for updating timestamps
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create triggers for updating timestamps
+CREATE TRIGGER update_lesson_gradings_updated_at
+  BEFORE UPDATE ON lesson_gradings
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_lesson_debriefs_updated_at
+  BEFORE UPDATE ON lesson_debriefs
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_lesson_debrief_performances_updated_at
+  BEFORE UPDATE ON lesson_debrief_performances
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Add RLS policies
+ALTER TABLE lesson_gradings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lesson_debriefs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lesson_debrief_performances ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for lesson_gradings
+CREATE POLICY "Allow read access to lesson_gradings for authenticated users"
+  ON lesson_gradings FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Allow insert access to lesson_gradings for admin users"
+  ON lesson_gradings FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM "User"
+      WHERE id = auth.uid()
+      AND (role = 'ADMIN' OR role = 'OWNER')
+    )
+  );
+
+-- Create policies for lesson_debriefs
+CREATE POLICY "Allow read access to lesson_debriefs for authenticated users"
+  ON lesson_debriefs FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM "Booking" b
+      JOIN "User" u ON b.organizationId = u.organizationId
+      WHERE b.id = lesson_debriefs.booking_id
+      AND u.id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Allow insert/update access to lesson_debriefs for instructors"
+  ON lesson_debriefs FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM "User"
+      WHERE id = auth.uid()
+      AND (role = 'INSTRUCTOR' OR role = 'ADMIN' OR role = 'OWNER')
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM "User"
+      WHERE id = auth.uid()
+      AND (role = 'INSTRUCTOR' OR role = 'ADMIN' OR role = 'OWNER')
+    )
+  );
+
+-- Create policies for lesson_debrief_performances
+CREATE POLICY "Allow read access to lesson_debrief_performances for authenticated users"
+  ON lesson_debrief_performances FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM lesson_debriefs ld
+      JOIN "Booking" b ON ld.booking_id = b.id
+      JOIN "User" u ON b.organizationId = u.organizationId
+      WHERE ld.id = lesson_debrief_performances.lesson_debrief_id
+      AND u.id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Allow insert/update access to lesson_debrief_performances for instructors"
+  ON lesson_debrief_performances FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM "User"
+      WHERE id = auth.uid()
+      AND (role = 'INSTRUCTOR' OR role = 'ADMIN' OR role = 'OWNER')
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM "User"
+      WHERE id = auth.uid()
+      AND (role = 'INSTRUCTOR' OR role = 'ADMIN' OR role = 'OWNER')
+    )
+  );

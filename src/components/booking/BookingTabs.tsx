@@ -1,22 +1,23 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Plane, 
   History,
   MessageSquare,
   Timer,
   Clock,
   ArrowRight,
+  FileText,
 } from "lucide-react";
 import { useBooking } from "@/hooks/useBooking";
 import { useState } from "react";
+import { LessonDebriefTable } from "@/components/LessonDebriefTable";
 
 interface BookingTabsProps {
   bookingId: string;
 }
 
 export function BookingTabs({ bookingId }: BookingTabsProps) {
-  const [activeTab, setActiveTab] = useState("aircraft");
+  const [activeTab, setActiveTab] = useState("flight_times");
   const { flightTimes, bookingDetails, loading, error } = useBooking(bookingId, {
     includeFlightTimes: activeTab === "flight_times"
   });
@@ -108,16 +109,16 @@ export function BookingTabs({ bookingId }: BookingTabsProps) {
 
   return (
     <Card className="lg:col-span-6 hover:shadow-lg transition-shadow">
-      <Tabs defaultValue="aircraft" className="w-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue="flight_times" className="w-full" onValueChange={setActiveTab}>
         <CardHeader>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="aircraft" className="flex items-center gap-2">
-              <Plane className="w-4 h-4" />
-              Aircraft
-            </TabsTrigger>
             <TabsTrigger value="flight_times" className="flex items-center gap-2">
               <Timer className="w-4 h-4" />
               Flight Times
+            </TabsTrigger>
+            <TabsTrigger value="debrief" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Lesson Debrief
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2">
               <History className="w-4 h-4" />
@@ -130,11 +131,11 @@ export function BookingTabs({ bookingId }: BookingTabsProps) {
           </TabsList>
         </CardHeader>
         <CardContent>
-          <TabsContent value="aircraft" className="mt-0">
-            <p className="text-muted-foreground">Aircraft details will be displayed here</p>
-          </TabsContent>
           <TabsContent value="flight_times" className="mt-0">
             {renderFlightTimes()}
+          </TabsContent>
+          <TabsContent value="debrief" className="mt-0">
+            {activeTab === 'debrief' && <LessonDebriefTable bookingId={bookingId} />}
           </TabsContent>
           <TabsContent value="history" className="mt-0">
             <p className="text-muted-foreground">Booking history will be displayed here</p>

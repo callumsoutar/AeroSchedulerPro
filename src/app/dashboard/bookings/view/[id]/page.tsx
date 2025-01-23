@@ -111,15 +111,41 @@ export default function BookingViewPage({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {booking.status === "flying" ? (
-              <Button className="bg-green-600 hover:bg-green-700" onClick={handleCheckIn}>
-                <LogIn className="w-4 h-4 mr-2" />
-                Check-in Flight
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline"
+                  className="border-green-600 text-green-600 hover:bg-green-50" 
+                  onClick={() => router.push(`/dashboard/bookings/check-in/${params.id}`)}
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Check-in
+                </Button>
+                <Button 
+                  className="bg-purple-600 hover:bg-purple-700 text-white" 
+                  onClick={() => router.push(`/dashboard/bookings/debrief/${params.id}`)}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Debrief and Check-in
+                </Button>
+              </div>
             ) : booking.status === "confirmed" ? (
-              <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleCheckIn}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Check Flight Out
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-100 text-white" 
+                  onClick={handleCheckIn}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Check Flight Out
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50" 
+                  onClick={() => router.push(`/dashboard/bookings/briefing/${params.id}`)}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Start Pre-flight Briefing
+                </Button>
+              </div>
             ) : null}
             
             <DropdownMenu>
@@ -145,7 +171,20 @@ export default function BookingViewPage({
 
       {/* Add Progress Bar */}
       <div className="py-8">
-        <BookingProgress currentStage={booking.status === 'flying' ? 'flying' : 'none'} />
+        <BookingProgress 
+          currentStage={
+            booking.status === 'flying' 
+              ? 'flying' 
+              : booking.status === 'complete'
+                ? 'checkin'
+                : booking.status === 'confirmed' || booking.status === 'unconfirmed'
+                  ? 'none'
+                  : 'none'
+          } 
+          bookingStatus={booking.status}
+          briefing_completed={booking.briefing_completed}
+          debrief_completed={booking.debrief_completed}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">

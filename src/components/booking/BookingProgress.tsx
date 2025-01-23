@@ -1,15 +1,19 @@
 import { cn } from "@/lib/utils";
-import { Plane } from "lucide-react";
+import { Plane, Check } from "lucide-react";
 
 interface BookingProgressProps {
   currentStage: 'briefing' | 'checkout' | 'flying' | 'debrief' | 'checkin' | 'none';
+  bookingStatus?: string;
+  briefing_completed?: boolean | null;
+  debrief_completed?: boolean | null;
 }
 
-export function BookingProgress({ currentStage }: BookingProgressProps) {
+export function BookingProgress({ currentStage, bookingStatus, briefing_completed, debrief_completed }: BookingProgressProps) {
   const stages = ['briefing', 'checkout', 'flying', 'debrief', 'checkin'];
   
   const getStageNumber = (stage: string) => {
     if (stage === 'flying') return <Plane className="w-4 h-4" />;
+    if (stage === 'checkin' && bookingStatus === 'complete') return <Check className="w-4 h-4" />;
     const numberMap: { [key: string]: number } = {
       'briefing': 1,
       'checkout': 2,
@@ -20,14 +24,44 @@ export function BookingProgress({ currentStage }: BookingProgressProps) {
   };
 
   const isStageComplete = (stage: string) => {
+    // If booking is complete, show all stages as complete
+    if (bookingStatus === 'complete') return true;
+    
+    // For briefing stage, only show complete if briefing_completed is true
+    if (stage === 'briefing') {
+      return briefing_completed === true;
+    }
+
+    // For debrief stage, only show complete if debrief_completed is true
+    if (stage === 'debrief') {
+      return debrief_completed === true;
+    }
+    
+    // For other stages, show as complete if they're before the current stage
     return stages.indexOf(stage) < stages.indexOf(currentStage);
   };
 
   const isCurrentStage = (stage: string) => {
+    if (bookingStatus === 'complete') return false;
     return stage === currentStage;
   };
 
   const getStageStyles = (stage: string) => {
+    if (bookingStatus === 'complete') {
+      if (stage === 'flying') {
+        return "border-purple-500 bg-purple-500 text-white";
+      }
+      return "border-primary bg-primary text-white";
+    }
+
+    if (stage === 'briefing' && briefing_completed === true) {
+      return "border-primary bg-primary text-white";
+    }
+
+    if (stage === 'debrief' && debrief_completed === true) {
+      return "border-primary bg-primary text-white";
+    }
+
     if (stage === 'flying') {
       if (isCurrentStage(stage)) {
         return "border-purple-500 bg-white text-purple-500";
@@ -48,6 +82,11 @@ export function BookingProgress({ currentStage }: BookingProgressProps) {
   };
 
   const getLabelStyles = (stage: string) => {
+    if (bookingStatus === 'complete') {
+      if (stage === 'flying') return "text-purple-500";
+      return "text-primary";
+    }
+
     if (stage === 'flying' && (isCurrentStage(stage) || isStageComplete(stage))) {
       return "text-purple-500";
     }
@@ -70,9 +109,11 @@ export function BookingProgress({ currentStage }: BookingProgressProps) {
               currentStage === 'flying' ? "bg-purple-500" : "bg-primary"
             )}
             style={{
-              width: currentStage === 'none' 
-                ? '0%' 
-                : `${((stages.indexOf(currentStage) / (stages.length - 1)) * 100)}%`
+              width: bookingStatus === 'complete' 
+                ? '100%' 
+                : currentStage === 'none' 
+                  ? '0%' 
+                  : `${((stages.indexOf(currentStage) / (stages.length - 1)) * 100)}%`
             }}
           />
         </div>

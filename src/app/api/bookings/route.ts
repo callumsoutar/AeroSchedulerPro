@@ -22,13 +22,13 @@ export async function GET(req: Request) {
     // Get organization ID
     const { data: userData, error: userError } = await supabase
       .from('User')
-      .select('organizationId, role')
+      .select('organization_id, role')
       .eq('id', session.user.id)
       .single();
 
     console.log('User data fetch:', { userData, userError });
 
-    if (userError || !userData?.organizationId) {
+    if (userError || !userData?.organization_id) {
       console.log('Organization fetch failed:', { userError });
       return NextResponse.json(
         { error: 'Organization not found' },
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       );
     }
 
-    console.log('Fetching bookings for organization:', userData.organizationId);
+    console.log('Fetching bookings for organization:', userData.organization_id);
 
     // Fetch bookings with related data
     const { data: bookings, error: bookingsError } = await supabase
@@ -78,7 +78,7 @@ export async function GET(req: Request) {
         ),
         lesson:lesson_id (*)
       `)
-      .eq('organization_id', userData.organizationId)
+      .eq('organization_id', userData.organization_id)
       .order('startTime', { ascending: false });
 
     console.log('Bookings fetch result:', {

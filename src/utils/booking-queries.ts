@@ -20,7 +20,11 @@ export interface BasicBookingInfo {
   startTime: string;
   endTime: string;
   description?: string;
+  organization_id: string;
   flight_type_id: string;
+  user_id: string | null;
+  briefing_completed: boolean | null;
+  debrief_completed: boolean | null;
   flight_type: FlightType;
   user?: {
     id: string;
@@ -69,6 +73,10 @@ export interface LessonInfo {
     name: string;
     description?: string;
     duration?: number;
+    prerequisites?: string[] | null;
+    objective?: any | null;
+    air_exercise?: any[] | null;
+    briefing_url?: string | null;
   }
 }
 
@@ -94,7 +102,11 @@ export const getBasicBookingInfo = async (
       startTime,
       endTime,
       description,
+      organization_id,
       flight_type_id,
+      user_id,
+      briefing_completed,
+      debrief_completed,
       flight_type:flight_type_id (
         id,
         name,
@@ -182,7 +194,11 @@ export const getLessonInfo = async (
         id,
         name,
         description,
-        duration
+        duration,
+        prerequisites,
+        objective,
+        air_exercise,
+        briefing_url
       )
     `)
     .eq('id', bookingId)

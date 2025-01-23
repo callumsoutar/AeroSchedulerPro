@@ -1,13 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-export default function OverallComments() {
+interface OverallCommentsProps {
+  onCommentsChange: (comments: string) => void;
+}
+
+export default function OverallComments({ onCommentsChange }: OverallCommentsProps) {
   const [comment, setComment] = useState("")
   const [isExpanded, setIsExpanded] = useState(false)
+
+  useEffect(() => {
+    onCommentsChange(comment);
+  }, [comment, onCommentsChange]);
 
   return (
     <div className="bg-white rounded-lg">

@@ -1,11 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
-export default function LessonStatus() {
+interface LessonStatusProps {
+  onStatusChange: (status: 'PASS' | 'FAIL' | 'INCOMPLETE') => void;
+}
+
+export default function LessonStatus({ onStatusChange }: LessonStatusProps) {
   const [status, setStatus] = useState<"passed" | "not-yet-competent">("not-yet-competent")
+
+  useEffect(() => {
+    // Map internal status to the format expected by parent
+    const statusMap = {
+      "passed": "PASS",
+      "not-yet-competent": "FAIL"
+    } as const;
+    
+    onStatusChange(statusMap[status]);
+  }, [status, onStatusChange]);
 
   return (
     <div className="bg-white rounded-lg">

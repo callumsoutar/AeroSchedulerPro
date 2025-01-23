@@ -23,94 +23,8 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@/types";
 import { format } from "date-fns";
-import Image from "next/image";
-
-const columns: ColumnDef<User>[] = [
-  {
-    accessorKey: "name",
-    header: "Name",
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-  },
-  {
-    accessorKey: "role",
-    header: "Role",
-    cell: ({ row }) => {
-      const role = row.getValue("role") as string;
-      return (
-        <Badge
-          variant={
-            role === "ADMIN"
-              ? "destructive"
-              : role === "INSTRUCTOR"
-              ? "warning"
-              : "default"
-          }
-        >
-          {role}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: "memberStatus",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("memberStatus") as string;
-      return (
-        <Badge
-          variant={
-            status === "ACTIVE"
-              ? "success"
-              : status === "SUSPENDED"
-              ? "destructive"
-              : "secondary"
-          }
-        >
-          {status}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: "phone",
-    header: "Phone",
-    cell: ({ row }) => row.getValue("phone") || "N/A",
-  },
-  {
-    accessorKey: "lastFlight",
-    header: "Last Flight",
-    cell: ({ row }) => {
-      const date = row.getValue("lastFlight") as string;
-      return date ? format(new Date(date), "MMM dd, yyyy") : "Never";
-    },
-  },
-  {
-    accessorKey: "photo_url",
-    header: "Photo",
-    cell: ({ row }) => {
-      const photoUrl = row.getValue("photo_url") as string;
-      return photoUrl ? (
-        <div className="relative h-10 w-10">
-          <Image
-            src={photoUrl}
-            alt={`${row.getValue("name")}`}
-            fill
-            className="object-cover rounded-full"
-          />
-        </div>
-      ) : (
-        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500 text-sm">
-            {(row.getValue("name") as string)?.charAt(0)?.toUpperCase() || "?"}
-          </span>
-        </div>
-      );
-    },
-  },
-];
+import { useRouter } from "next/navigation";
+import { Eye } from "lucide-react";
 
 async function getMembers() {
   console.log('Fetching members');
@@ -126,6 +40,90 @@ async function getMembers() {
 
 export function MembersTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const router = useRouter();
+  
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: "name",
+      header: "Name",
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      cell: ({ row }) => {
+        const role = row.getValue("role") as string;
+        return (
+          <Badge
+            variant={
+              role === "ADMIN"
+                ? "destructive"
+                : role === "INSTRUCTOR"
+                ? "warning"
+                : "default"
+            }
+          >
+            {role}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "memberStatus",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("memberStatus") as string;
+        return (
+          <Badge
+            variant={
+              status === "ACTIVE"
+                ? "success"
+                : status === "SUSPENDED"
+                ? "destructive"
+                : "secondary"
+            }
+          >
+            {status}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "phone",
+      header: "Phone",
+      cell: ({ row }) => row.getValue("phone") || "N/A",
+    },
+    {
+      accessorKey: "lastFlight",
+      header: "Last Flight",
+      cell: ({ row }) => {
+        const date = row.getValue("lastFlight") as string;
+        return date ? format(new Date(date), "MMM dd, yyyy") : "Never";
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const userId = row.original.id;
+        return (
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => router.push(`/dashboard/members/view/${userId}`)}
+          >
+            <Eye className="h-4 w-4" />
+            View
+          </Button>
+        );
+      },
+    },
+  ];
+
   const { data: members = [], isLoading, error } = useQuery({
     queryKey: ["members"],
     queryFn: getMembers,

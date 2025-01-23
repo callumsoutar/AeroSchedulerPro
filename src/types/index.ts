@@ -225,6 +225,22 @@ export type Lesson = {
   duration: number | null;
   created_at: string | null;
   updated_at: string | null;
+  briefing_url: string | null;
+  air_exercise: any[] | null;  // JSONB type
+  prerequisites: any[] | null;  // JSONB type
+  objective: any | null;  // JSONB type
+};
+
+export type StudentLesson = {
+  id: string;
+  student_id: string;
+  completed_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  organization_id: string;
+  lesson_id: string;
+  lesson?: Lesson | null;
 };
 
 export type Booking = {
@@ -240,6 +256,7 @@ export type Booking = {
   lesson_id: string | null;
   booking_flight_times_id: string | null;
   booking_details_id: string | null;
+  briefing_completed: boolean | null;
   startTime: string;
   endTime: string;
   created_at: string;
@@ -258,4 +275,44 @@ export type Booking = {
   booking_details?: BookingDetails | null;
   flight_times?: BookingFlightTimes | null;
   lesson?: Lesson | null;
+};
+
+export type LessonGrading = {
+  id: string;
+  name: string;
+  description: string | null;
+  lesson_id: string;
+  organizationId: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DebriefPerformanceJSON = {
+  grading_id: string;
+  grade: number;
+  comments: string | null;
+  name: string;  // from lesson_gradings
+  description: string | null;  // from lesson_gradings
+};
+
+export type LessonDebrief = {
+  id: string;
+  booking_id: string;
+  created_at: string;
+  updated_at: string;
+  performances_json: DebriefPerformanceJSON[] | null;
+  lesson_status: 'PASS' | 'FAIL' | 'INCOMPLETE';
+  overall_comments: string | null;
+  booking?: Booking;
+  performances?: LessonDebriefPerformance[];
+};
+
+export type LessonDebriefPerformance = {
+  id: string;
+  lesson_debrief_id: string;
+  description: string;
+  grade: number;
+  comments: string | null;
+  created_at: string;
+  updated_at: string;
 }; 

@@ -146,7 +146,12 @@ export default function CheckOutPage({
       </div>
 
       <div className="py-8">
-        <BookingProgress currentStage="checkout" />
+        <BookingProgress 
+          currentStage="checkout" 
+          bookingStatus={booking.status} 
+          briefing_completed={booking.briefing_completed}
+          debrief_completed={booking.debrief_completed}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">

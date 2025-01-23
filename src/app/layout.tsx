@@ -6,7 +6,7 @@ import SupabaseProvider from "@/providers/SupabaseProvider";
 import UserProvider from "@/providers/UserProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from 'sonner';
 
 const font = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
