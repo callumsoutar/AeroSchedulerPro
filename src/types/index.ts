@@ -315,4 +315,25 @@ export type LessonDebriefPerformance = {
   comments: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type DefectStatus = 'open' | 'pending' | 'closed';
+
+export type Defect = {
+  id: string;
+  aircraft_id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  reported_at: string;
+  status: DefectStatus;
+  organization_id: string;
+  created_at: string;
+  updated_at: string;
+  aircraft?: Aircraft;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }; 

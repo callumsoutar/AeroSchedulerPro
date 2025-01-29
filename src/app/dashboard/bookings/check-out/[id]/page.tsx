@@ -5,7 +5,6 @@ import { useRedirectIfNotAuthenticated } from "@/hooks/useRedirectIfNotAuthentic
 import Loading from "@/components/Loading";
 import { useBooking } from "@/hooks/useBooking";
 import { OptimizedBookingView } from "@/components/booking/OptimizedBookingView";
-import { OptimizedPeopleView } from "@/components/booking/OptimizedPeopleView";
 import { BookingDetails } from "@/components/booking/BookingDetails";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
@@ -154,18 +153,19 @@ export default function CheckOutPage({
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Booking Details */}
-        <OptimizedBookingView bookingId={params.id} />
-
-        {/* People Details */}
-        <OptimizedPeopleView bookingId={params.id} />
+        <div className="lg:col-span-2">
+          <OptimizedBookingView bookingId={params.id} />
+        </div>
 
         {/* Flight Details Form */}
-        <BookingDetails 
-          bookingId={params.id}
-          onFormChange={setFormData}
-        />
+        <div className="lg:col-span-1">
+          <BookingDetails 
+            bookingId={params.id}
+            onFormChange={setFormData}
+          />
+        </div>
       </div>
 
       <CheckoutModal 
